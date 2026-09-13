@@ -1,346 +1,1086 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PRMIS Live Camera Scanner</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .scanner-header {
-      background: #1e293b;
-      border-bottom: 1px solid #334155;
-      padding: 12px 16px;
-    }
-    .scanner-container {
-      position: relative;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: #000;
-      overflow: hidden;
-    }
-    #reader {
-      width: 100% !important;
-      max-width: 500px;
-      border: none !important;
-    }
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 8px;
-    }
-    .reticle-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 280px;
-      height: 180px;
-      border: 2px solid rgba(59, 130, 246, 0.8);
-      border-radius: 12px;
-      box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.45);
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 8px;
-    }
-    .reticle-corner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-color: #60a5fa;
-      border-style: solid;
-      pointer-events: none;
-    }
-    .reticle-tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 12px; }
-    .reticle-tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 12px; }
-    .reticle-bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 12px; }
-    .reticle-br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 12px; }
-    .scan-laser {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef4444;
-      animation: scanLaser 2s infinite ease-in-out;
-    }
-    @keyframes scanLaser {
-      0% { top: 10%; opacity: 0.8; }
-      50% { top: 90%; opacity: 1; }
-      100% { top: 10%; opacity: 0.8; }
-    }
-    .scanner-footer {
-      background: #1e293b;
-      border-top: 1px solid #334155;
-      padding: 14px 16px;
-    }
-    .card-preview {
-      word-break: break-all;
-      font-family: monospace;
-      font-size: 0.8rem;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 8px 10px;
-      max-height: 80px;
-      overflow-y: auto;
-    }
-  </style>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>PRMIS Live Camera Scanner</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+	<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+	<style>
+	* {
+		box-sizing: border-box;
+	}
+	
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+	
+	body {
+		background: #020617;
+		color: #f8fafc;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+		user-select: none;
+		-webkit-user-select: none;
+		display: flex;
+		flex-direction: column;
+	}
+	/* =========================================================
+       HEADER
+       ========================================================= */
+	
+	.scanner-header {
+		flex: 0 0 auto;
+		background: #0f172a;
+		border-bottom: 1px solid #334155;
+		padding: 10px 12px;
+		z-index: 50;
+	}
+	
+	.scanner-title {
+		font-size: 0.95rem;
+		font-weight: 700;
+	}
+	
+	.scanner-subtitle {
+		font-size: 0.68rem;
+		color: #94a3b8;
+	}
+	/* =========================================================
+       CAMERA
+       ========================================================= */
+	
+	.scanner-container {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: #000;
+		overflow: hidden;
+	}
+	
+	#reader {
+		width: 100% !important;
+		height: 100% !important;
+		max-width: 900px;
+		border: none !important;
+		background: #000;
+	}
+	
+	#reader video {
+		width: 100% !important;
+		height: 100% !important;
+		object-fit: cover !important;
+		background: #000;
+	}
+	
+	#reader__dashboard,
+	#reader__status_span {
+		display: none !important;
+	}
+	/* =========================================================
+       RETICLE
+       ========================================================= */
+	
+	.reticle-overlay {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: min(82vw, 360px);
+		height: min(42vw, 190px);
+		min-height: 150px;
+		border: 2px solid rgba(96, 165, 250, 0.85);
+		border-radius: 14px;
+		box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.48), 0 0 25px rgba(59, 130, 246, 0.15);
+		pointer-events: none;
+		z-index: 20;
+	}
+	
+	.reticle-corner {
+		position: absolute;
+		width: 25px;
+		height: 25px;
+		border-color: #60a5fa;
+		border-style: solid;
+	}
+	
+	.reticle-tl {
+		top: -2px;
+		left: -2px;
+		border-width: 5px 0 0 5px;
+		border-top-left-radius: 14px;
+	}
+	
+	.reticle-tr {
+		top: -2px;
+		right: -2px;
+		border-width: 5px 5px 0 0;
+		border-top-right-radius: 14px;
+	}
+	
+	.reticle-bl {
+		bottom: -2px;
+		left: -2px;
+		border-width: 0 0 5px 5px;
+		border-bottom-left-radius: 14px;
+	}
+	
+	.reticle-br {
+		bottom: -2px;
+		right: -2px;
+		border-width: 0 5px 5px 0;
+		border-bottom-right-radius: 14px;
+	}
+	
+	.scan-laser {
+		position: absolute;
+		left: 4%;
+		right: 4%;
+		height: 2px;
+		background: #ef4444;
+		box-shadow: 0 0 6px #ef4444, 0 0 12px rgba(239, 68, 68, 0.7);
+		animation: scanLaser 1.7s infinite ease-in-out;
+	}
+	
+	@keyframes scanLaser {
+		0% {
+			top: 8%;
+			opacity: 0.6;
+		}
+		50% {
+			top: 92%;
+			opacity: 1;
+		}
+		100% {
+			top: 8%;
+			opacity: 0.6;
+		}
+	}
+	/* =========================================================
+       GUIDANCE
+       ========================================================= */
+	
+	.scan-guidance {
+		position: absolute;
+		top: calc(50% + 115px);
+		left: 50%;
+		transform: translateX(-50%);
+		width: min(88vw, 420px);
+		text-align: center;
+		z-index: 25;
+		pointer-events: none;
+	}
+	
+	.guidance-message {
+		display: inline-block;
+		padding: 7px 12px;
+		border-radius: 999px;
+		background: rgba(15, 23, 42, 0.82);
+		border: 1px solid rgba(148, 163, 184, 0.25);
+		color: #e2e8f0;
+		font-size: 0.74rem;
+	}
+	/* =========================================================
+       STATUS
+       ========================================================= */
+	
+	.status-badge {
+		position: absolute;
+		left: 50%;
+		bottom: 12px;
+		transform: translateX(-50%);
+		z-index: 30;
+		white-space: nowrap;
+		max-width: 90vw;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 0.72rem;
+	}
+	/* =========================================================
+       CONTROLS
+       ========================================================= */
+	
+	.camera-controls {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		z-index: 40;
+		display: flex;
+		gap: 6px;
+	}
+	
+	.camera-control-btn {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(15, 23, 42, 0.82);
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		color: white;
+	}
+	
+	.camera-control-btn.active {
+		background: rgba(245, 158, 11, 0.9);
+		color: #111827;
+	}
+	/* =========================================================
+       ZOOM CONTROL
+       ========================================================= */
+	
+	.zoom-control {
+		position: absolute;
+		left: 50%;
+		bottom: 55px;
+		transform: translateX(-50%);
+		z-index: 35;
+		width: min(80vw, 360px);
+		display: none;
+		padding: 8px 12px;
+		background: rgba(15, 23, 42, 0.82);
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+	}
+	
+	.zoom-control.visible {
+		display: block;
+	}
+	
+	.zoom-label {
+		font-size: 0.68rem;
+		color: #cbd5e1;
+	}
+	
+	#zoomSlider {
+		width: 100%;
+	}
+	/* =========================================================
+       FOOTER
+       ========================================================= */
+	
+	.scanner-footer {
+		flex: 0 0 auto;
+		background: #0f172a;
+		border-top: 1px solid #334155;
+		padding: 9px 12px;
+		z-index: 50;
+	}
+	
+	.card-preview {
+		word-break: break-all;
+		font-family: monospace;
+		font-size: 0.72rem;
+		background: #020617;
+		border: 1px solid #334155;
+		border-radius: 6px;
+		padding: 7px 9px;
+		max-height: 65px;
+		overflow-y: auto;
+	}
+	/* =========================================================
+       LOW LIGHT
+       ========================================================= */
+	
+	.low-light-indicator {
+		position: absolute;
+		top: 58px;
+		left: 12px;
+		z-index: 40;
+		display: none;
+		font-size: 0.68rem;
+		padding: 5px 9px;
+		border-radius: 999px;
+		background: rgba(245, 158, 11, 0.9);
+		color: #111827;
+		font-weight: 600;
+	}
+	
+	.low-light-indicator.visible {
+		display: block;
+	}
+	/* =========================================================
+       MOBILE
+       ========================================================= */
+	
+	@media (max-width: 576px) {
+		.reticle-overlay {
+			width: 84vw;
+			height: 38vw;
+			min-height: 135px;
+		}
+		.scan-guidance {
+			top: calc(50% + 100px);
+		}
+		.scanner-footer {
+			padding: 7px 9px;
+		}
+		.scanner-header {
+			padding: 8px 10px;
+		}
+	}
+	</style>
 </head>
+
 <body>
+	<!-- =======================================================
+       HEADER
+       ======================================================== -->
+	<div class="scanner-header d-flex justify-content-between align-items-center">
+		<div>
+			<div class="scanner-title d-flex align-items-center gap-2"> <i class="bi bi-qr-code-scan text-primary"></i> PRMIS Live Scanner </div>
+			<div class="scanner-subtitle"> Fast QR & Barcode Scanner </div>
+		</div>
+		<div class="d-flex gap-1">
+			<button id="btnSwitchCamera" class="btn btn-sm btn-outline-light" title="Switch Camera" onclick="switchCamera()"> <i class="bi bi-camera-reels"></i> </button>
+			<button id="btnClose" class="btn btn-sm btn-outline-danger" title="Close Scanner" onclick="closeScanner()"> <i class="bi bi-x-lg"></i> </button>
+		</div>
+	</div>
+	<!-- =======================================================
+       CAMERA VIEW
+       ======================================================== -->
+	<div class="scanner-container">
+		<div id="reader"></div>
+		<!-- Camera controls -->
+		<div class="camera-controls">
+			<button id="btnTorch" class="camera-control-btn" title="Torch" onclick="toggleTorch()"> <i class="bi bi-lightning-charge-fill"></i> </button>
+			<button id="btnZoom" class="camera-control-btn" title="Zoom" onclick="toggleZoomControl()"> <i class="bi bi-zoom-in"></i> </button>
+		</div>
+		<!-- Low light indicator -->
+		<div id="lowLightIndicator" class="low-light-indicator"> <i class="bi bi-moon-stars-fill me-1"></i> Low light </div>
+		<!-- Reticle -->
+		<div id="reticle" class="reticle-overlay">
+			<div class="reticle-corner reticle-tl"></div>
+			<div class="reticle-corner reticle-tr"></div>
+			<div class="reticle-corner reticle-bl"></div>
+			<div class="reticle-corner reticle-br"></div>
+			<div class="scan-laser"></div>
+		</div>
+		<!-- Guidance -->
+		<div class="scan-guidance">
+			<div id="guidanceMessage" class="guidance-message"> <i class="bi bi-qr-code me-1"></i> Place QR/barcode inside the box </div>
+		</div>
+		<!-- Status -->
+		<div id="statusBadge" class="status-badge px-3 py-1 rounded-pill bg-dark bg-opacity-75 text-white border border-secondary"> <i class="bi bi-camera-video-fill text-warning me-1"></i> Starting camera... </div>
+		<!-- Zoom -->
+		<div id="zoomControl" class="zoom-control">
+			<div class="d-flex justify-content-between mb-1"> <span class="zoom-label">
+          <i class="bi bi-zoom-in me-1"></i>
+          Zoom
+        </span> <span id="zoomValue" class="zoom-label">
+          1.0×
+        </span> </div>
+			<input type="range" id="zoomSlider" min="1" max="1" step="0.1" value="1" oninput="applyZoom(this.value)" /> </div>
+	</div>
+	<!-- =======================================================
+       FOOTER
+       ======================================================== -->
+	<div class="scanner-footer">
+		<div id="resultContainer" style="display:none;" class="mb-2">
+			<div class="d-flex justify-content-between align-items-center mb-1"> <span class="badge bg-success">
 
-  <!-- Scanner Header -->
-  <div class="scanner-header d-flex justify-content-between align-items-center">
-    <div>
-      <div class="fw-bold fs-6 text-white d-flex align-items-center gap-2">
-        <i class="bi bi-camera-fill text-primary"></i> PRMIS Live Scanner
-      </div>
-      <div class="small text-secondary" style="font-size: 0.72rem;">Standalone HTTPS Camera Component</div>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <button id="btnSwitchCamera" class="btn btn-sm btn-outline-light" title="Switch Camera" onclick="switchCamera()">
-        <i class="bi bi-camera-reels"></i>
-      </button>
-      <button id="btnClose" class="btn btn-sm btn-outline-danger" title="Close Scanner" onclick="closeScanner()">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-  </div>
+          <i class="bi bi-check-circle-fill me-1"></i>
 
-  <!-- Camera Viewport -->
-  <div class="scanner-container">
-    <div id="reader"></div>
+          Card Decoded
 
-    <!-- Reticle Guide -->
-    <div class="reticle-overlay" id="reticle">
-      <div class="reticle-corner reticle-tl"></div>
-      <div class="reticle-corner reticle-tr"></div>
-      <div class="reticle-corner reticle-bl"></div>
-      <div class="reticle-corner reticle-br"></div>
-      <div class="scan-laser"></div>
-    </div>
+        </span>
+				<button class="btn btn-sm text-secondary p-0" onclick="resetScan()"> <i class="bi bi-arrow-clockwise"></i> Scan Again </button>
+			</div>
+			<div class="card-preview" id="scannedTextDisplay"></div>
+		</div>
+		<div class="d-flex gap-2">
+			<button id="btnSend" class="btn btn-primary flex-grow-1" style="display:none;" onclick="sendDecodedValue()"> <i class="bi bi-box-arrow-down-left me-1"></i> Send to PRMIS </button>
+			<button id="btnManualInput" class="btn btn-outline-secondary btn-sm" onclick="promptManualInput()"> <i class="bi bi-keyboard"></i> Manual </button>
+		</div>
+	</div>
 
-    <!-- Status message badge -->
-    <div id="statusBadge" class="position-absolute bottom-0 mb-3 px-3 py-1 rounded-pill bg-dark bg-opacity-75 text-white small border border-secondary" style="font-size: 0.75rem; z-index: 10;">
-      <i class="bi bi-bullseye text-warning me-1"></i> Align QR or barcode in box
-    </div>
-  </div>
+  <!-- =======================================================
+JAVASCRIPT === === === === === === === === === === === === === === === === === === == -->
+<script>
+	/* =========================================================
+	   GLOBAL STATE
+	   ========================================================= */
+let html5QrCode = null;
+let currentFacingMode = "environment";
+let lastDecodedText = "";
+let isProcessing = false;
+let cameraStarting = false;
+let restartTimer = null;
+let torchSupported = false;
+let torchEnabled = false;
+let zoomSupported = false;
+let zoomMin = 1;
+let zoomMax = 1;
+let zoomStep = 0.1;
+let currentZoom = 1;
+let cameraTrack = null;
+let lastScanText = "";
+let lastScanTime = 0;
+let scanCooldown = 1800;
+let scanFailureCount = 0;
+let lastFailureTime = Date.now();
+let guidanceTimer = null;
+let lowLightTimer = null;
+/* =========================================================
+   SUPPORTED FORMATS
+   ========================================================= */
+const SUPPORTED_FORMATS = [
+	Html5QrcodeSupportedFormats.QR_CODE,
+	Html5QrcodeSupportedFormats.CODE_128,
+	Html5QrcodeSupportedFormats.CODE_39,
+	Html5QrcodeSupportedFormats.CODE_93,
+	Html5QrcodeSupportedFormats.EAN_13,
+	Html5QrcodeSupportedFormats.EAN_8,
+	Html5QrcodeSupportedFormats.UPC_A,
+	Html5QrcodeSupportedFormats.UPC_E,
+	Html5QrcodeSupportedFormats.ITF,
+	Html5QrcodeSupportedFormats.DATA_MATRIX
+];
+/* =========================================================
+   INITIALISE
+   ========================================================= */
+window.addEventListener("load", function() {
+	initScanner();
+});
 
-  <!-- Footer Result & Action Area -->
-  <div class="scanner-footer">
-    <div id="resultContainer" style="display: none;" class="mb-2">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Card Decoded</span>
-        <button class="btn btn-sm text-secondary p-0" onclick="resetScan()"><i class="bi bi-arrow-clockwise"></i> Scan Again</button>
-      </div>
-      <div class="card-preview mb-2" id="scannedTextDisplay"></div>
-    </div>
+function initScanner() {
+	if(typeof Html5Qrcode === "undefined") {
+		setStatus("Scanner library could not be loaded.", "danger");
+		return;
+	}
+	html5QrCode = new Html5Qrcode("reader", {
+		verbose: false,
+		formatsToSupport: SUPPORTED_FORMATS
+	});
+	startCamera();
+}
+/* =========================================================
+   START CAMERA
+   ========================================================= */
+function startCamera() {
+	if(cameraStarting) {
+		return;
+	}
+	cameraStarting = true;
+	setStatus("Accessing camera...", "dark");
+	const cameraConfig = {
+		facingMode: currentFacingMode
+	};
+	const scanConfig = {
+		fps: 20,
+		qrbox: function(viewfinderWidth, viewfinderHeight) {
+			/*
+			 * Keep scan area reasonably small for faster decoding,
+			 * but large enough for cards used in the field.
+			 */
+			const width = Math.min(Math.floor(viewfinderWidth * 0.78), 360);
+			const height = Math.min(Math.floor(viewfinderHeight * 0.38), 190);
+			return {
+				width: width,
+				height: height
+			};
+		},
+		aspectRatio: 1.7777778,
+		disableFlip: false,
+		experimentalFeatures: {
+			useBarCodeDetectorIfSupported: true
+		}
+	};
+	html5QrCode.start(cameraConfig, scanConfig, onScanSuccess, onScanFailure).then(function() {
+		cameraStarting = false;
+		scanFailureCount = 0;
+		setStatus("Camera live • Ready to scan", "dark");
+		setGuidance("Place QR/barcode inside the box");
+		getCameraTrack();
+		configureCamera();
+		startLowLightMonitoring();
+	}).catch(function(error) {
+		cameraStarting = false;
+		console.error("Camera start error:", error);
+		setStatus("Camera unavailable. Check browser permission.", "danger");
+	});
+}
+/* =========================================================
+   GET CAMERA TRACK
+   ========================================================= */
+function getCameraTrack() {
+	try {
+		const video = document.querySelector("#reader video");
+		if(!video) {
+			console.warn("Camera video element not found.");
+			return null;
+		}
+		const stream = video.srcObject;
+		if(!stream) {
+			console.warn("Camera stream not found.");
+			return null;
+		}
+		const tracks = stream.getVideoTracks();
+		if(!tracks || !tracks.length) {
+			return null;
+		}
+		cameraTrack = tracks[0];
+		console.log("Camera track:", cameraTrack.getSettings());
+		console.log("Camera capabilities:", cameraTrack.getCapabilities ? cameraTrack.getCapabilities() : "Not available");
+		return cameraTrack;
+	} catch(error) {
+		console.warn("Unable to obtain camera track:", error);
+		return null;
+	}
+}
+/* =========================================================
+   CAMERA OPTIMISATION
+   ========================================================= */
+async function configureCamera() {
+	if(!cameraTrack) {
+		getCameraTrack();
+	}
+	if(!cameraTrack) {
+		return;
+	}
+	try {
+		const capabilities = cameraTrack.getCapabilities ? cameraTrack.getCapabilities() : {};
+		const constraints = {};
+		/*
+		 * CONTINUOUS AUTOFOCUS
+		 */
+		if(capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
+			constraints.focusMode = "continuous";
+			console.log("Continuous autofocus enabled.");
+		}
+		/*
+		 * AUTO EXPOSURE
+		 */
+		if(capabilities.exposureMode && capabilities.exposureMode.includes("continuous")) {
+			constraints.exposureMode = "continuous";
+		}
+		/*
+		 * AUTO WHITE BALANCE
+		 */
+		if(capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes("continuous")) {
+			constraints.whiteBalanceMode = "continuous";
+		}
+		/*
+		 * APPLY CAMERA CONSTRAINTS
+		 */
+		if(Object.keys(constraints).length) {
+			await cameraTrack.applyConstraints({
+				advanced: [constraints]
+			});
+		}
+		/*
+		 * TORCH
+		 */
+		if(capabilities.torch === true) {
+			torchSupported = true;
+			document.getElementById("btnTorch").style.display = "flex";
+			console.log("Torch supported.");
+		} else {
+			torchSupported = false;
+			document.getElementById("btnTorch").style.display = "none";
+		}
+		/*
+		 * ZOOM
+		 */
+		if(capabilities.zoom) {
+			zoomSupported = true;
+			zoomMin = Number(capabilities.zoom.min || 1);
+			zoomMax = Number(capabilities.zoom.max || 1);
+			zoomStep = Number(capabilities.zoom.step || 0.1);
+			currentZoom = zoomMin;
+			const slider = document.getElementById("zoomSlider");
+			slider.min = zoomMin;
+			slider.max = zoomMax;
+			slider.step = zoomStep;
+			slider.value = currentZoom;
+			document.getElementById("btnZoom").style.display = "flex";
+			console.log("Zoom supported:", zoomMin, zoomMax, zoomStep);
+		} else {
+			zoomSupported = false;
+			document.getElementById("btnZoom").style.display = "none";
+		}
+	} catch(error) {
+		console.warn("Camera optimisation failed:", error);
+	}
+}
+/* =========================================================
+   TORCH
+   ========================================================= */
+async function toggleTorch() {
+	if(!cameraTrack || !torchSupported) {
+		return;
+	}
+	try {
+		torchEnabled = !torchEnabled;
+		await cameraTrack.applyConstraints({
+			advanced: [{
+				torch: torchEnabled
+			}]
+		});
+		const button = document.getElementById("btnTorch");
+		if(torchEnabled) {
+			button.classList.add("active");
+			setStatus("Torch ON • Camera live", "dark");
+		} else {
+			button.classList.remove("active");
+			setStatus("Camera live • Ready to scan", "dark");
+		}
+	} catch(error) {
+		console.warn("Torch could not be changed:", error);
+		torchEnabled = false;
+	}
+}
+/* =========================================================
+   AUTOMATIC LOW LIGHT DETECTION
+   ========================================================= */
+function startLowLightMonitoring() {
+	if(lowLightTimer) {
+		clearInterval(lowLightTimer);
+	}
+	/*
+	 * We inspect the displayed camera image locally.
+	 *
+	 * No image is uploaded anywhere.
+	 */
+	lowLightTimer = setInterval(function() {
+		detectLowLight();
+	}, 1200);
+}
 
-    <div class="d-flex gap-2">
-      <button id="btnSend" class="btn btn-primary flex-grow-1" style="display: none;" onclick="sendDecodedValue()">
-        <i class="bi bi-box-arrow-down-left me-1"></i> Send to PRMIS & Close
-      </button>
-      <button id="btnManualInput" class="btn btn-outline-secondary btn-sm" onclick="promptManualInput()">
-        <i class="bi bi-keyboard"></i> Manual
-      </button>
-    </div>
-  </div>
+function detectLowLight() {
+	if(!cameraTrack) {
+		return;
+	}
+	const video = document.querySelector("#reader video");
+	if(!video || video.readyState < 2) {
+		return;
+	}
+	try {
+		/*
+		 * Very small local canvas sample.
+		 *
+		 * This is only used to estimate brightness.
+		 */
+		const canvas = document.createElement("canvas");
+		canvas.width = 32;
+		canvas.height = 18;
+		const ctx = canvas.getContext("2d", {
+			willReadFrequently: true
+		});
+		ctx.drawImage(video, 0, 0, 32, 18);
+		const pixels = ctx.getImageData(0, 0, 32, 18).data;
+		let total = 0;
+		for(let i = 0; i < pixels.length; i += 4) {
+			const r = pixels[i];
+			const g = pixels[i + 1];
+			const b = pixels[i + 2];
+			/*
+			 * Perceived brightness.
+			 */
+			total += (0.299 * r) + (0.587 * g) + (0.114 * b);
+		}
+		const brightness = total / (pixels.length / 4);
+		const indicator = document.getElementById("lowLightIndicator");
+		/*
+		 * Threshold intentionally conservative.
+		 */
+		if(brightness < 55) {
+			indicator.classList.add("visible");
+			/*
+			 * Automatically turn torch ON
+			 * when supported.
+			 */
+			if(torchSupported && !torchEnabled) {
+				autoEnableTorch();
+			}
+		} else {
+			indicator.classList.remove("visible");
+			/*
+			 * We deliberately DO NOT
+			 * automatically switch torch off.
+			 *
+			 * Once the user enters a dark area,
+			 * keeping the torch on is more useful.
+			 */
+		}
+	} catch(error) {
+		console.warn("Low-light detection error:", error);
+	}
+}
+async function autoEnableTorch() {
+	if(!cameraTrack || !torchSupported || torchEnabled) {
+		return;
+	}
+	try {
+		await cameraTrack.applyConstraints({
+			advanced: [{
+				torch: true
+			}]
+		});
+		torchEnabled = true;
+		document.getElementById("btnTorch").classList.add("active");
+		setStatus("Low light • Torch automatically enabled", "dark");
+	} catch(error) {
+		console.warn("Automatic torch failed:", error);
+	}
+}
+/* =========================================================
+   ZOOM
+   ========================================================= */
+function toggleZoomControl() {
+	if(!zoomSupported) {
+		return;
+	}
+	const panel = document.getElementById("zoomControl");
+	panel.classList.toggle("visible");
+}
+async function applyZoom(value) {
+	if(!cameraTrack || !zoomSupported) {
+		return;
+	}
+	try {
+		currentZoom = Number(value);
+		await cameraTrack.applyConstraints({
+			advanced: [{
+				zoom: currentZoom
+			}]
+		});
+		document.getElementById("zoomValue").textContent = currentZoom.toFixed(1) + "×";
+	} catch(error) {
+		console.warn("Zoom failed:", error);
+	}
+}
+/* =========================================================
+   SCAN SUCCESS
+   ========================================================= */
+function onScanSuccess(decodedText) {
+	decodedText = String(decodedText || "").trim();
+	if(!decodedText) {
+		return;
+	}
+	const now = Date.now();
+	/*
+	 * DUPLICATE PROTECTION
+	 *
+	 * Same QR/barcode within the cooldown
+	 * is ignored.
+	 */
+	if(decodedText === lastScanText && (now - lastScanTime) < scanCooldown) {
+		return;
+	}
+	/*
+	 * Prevent multiple callbacks from
+	 * firing at the same time.
+	 */
+	if(isProcessing) {
+		return;
+	}
+	isProcessing = true;
+	lastScanText = decodedText;
+	lastScanTime = now;
+	lastDecodedText = decodedText;
+	/*
+	 * SUCCESS FEEDBACK
+	 */
+	playBeep();
+	vibrateDevice();
+	/*
+	 * Stop laser animation visually.
+	 */
+	const reticle = document.getElementById("reticle");
+	if(reticle) {
+		reticle.style.borderColor = "#22c55e";
+	}
+	/*
+	 * Show result.
+	 */
+	document.getElementById("resultContainer").style.display = "block";
+	document.getElementById("scannedTextDisplay").textContent = decodedText;
+	document.getElementById("btnSend").style.display = "inline-block";
+	setStatus("Card decoded successfully", "success");
+	setGuidance("Sending to PRMIS...");
+	/*
+	 * Automatically send to PRMIS.
+	 */
+	sendDecodedValue();
+}
+/* =========================================================
+   SCAN FAILURE
+   ========================================================= */
+function onScanFailure(error) {
+	/*
+	 * html5-qrcode calls this very frequently.
+	 *
+	 * Do NOT write to console here.
+	 */
+	scanFailureCount++;
+	const now = Date.now();
+	/*
+	 * Give occasional guidance only.
+	 */
+	if(now - lastFailureTime > 1800) {
+		lastFailureTime = now;
+		updateGuidance();
+	}
+	/*
+	 * If the scanner appears to have stopped
+	 * producing frames, schedule a restart.
+	 */
+	if(scanFailureCount > 150) {
+		scanFailureCount = 0;
+		scheduleScannerRestart();
+	}
+}
+/* =========================================================
+   GUIDANCE
+   ========================================================= */
+function updateGuidance() {
+	if(isProcessing) {
+		return;
+	}
+	/*
+	 * We cannot reliably calculate physical
+	 * distance from html5-qrcode alone.
+	 *
+	 * Therefore use practical guidance based
+	 * on scan behaviour rather than pretending
+	 * to know exact distance.
+	 */
+	const messages = ["Align QR/barcode inside the box", "Hold the card steady", "Move slightly closer", "Move slightly farther if the code is too large", "Avoid glare and keep the card flat", "Use torch in low light"];
+	const index = Math.floor(Math.random() * messages.length);
+	setGuidance(messages[index]);
+}
 
-  <script>
-    let html5QrCode = null;
-    let currentFacingMode = "environment";
-    let lastDecodedText = "";
-    let isProcessing = false;
+function setGuidance(message) {
+	const element = document.getElementById("guidanceMessage");
+	if(element) {
+		element.innerHTML = '<i class="bi bi-qr-code-scan me-1"></i>' + message;
+	}
+}
+/* =========================================================
+   AUTOMATIC RESTART
+   ========================================================= */
+function scheduleScannerRestart() {
+	if(restartTimer || cameraStarting || !html5QrCode) {
+		return;
+	}
+	console.warn("Scanner appears inactive. Scheduling restart.");
+	restartTimer = setTimeout(async function() {
+		restartTimer = null;
+		await restartScanner();
+	}, 800);
+}
+async function restartScanner() {
+	if(!html5QrCode) {
+		return;
+	}
+	try {
+		if(html5QrCode.isScanning) {
+			await html5QrCode.stop();
+		}
+	} catch(error) {
+		console.warn("Scanner stop during restart:", error);
+	}
+	cameraTrack = null;
+	cameraStarting = false;
+	/*
+	 * Small delay allows the browser
+	 * to release the old camera track.
+	 */
+	setTimeout(function() {
+		startCamera();
+	}, 300);
+}
+/* =========================================================
+   SWITCH CAMERA
+   ========================================================= */
+async function switchCamera() {
+	if(!html5QrCode || cameraStarting) {
+		return;
+	}
+	try {
+		cameraStarting = true;
+		if(html5QrCode.isScanning) {
+			await html5QrCode.stop();
+		}
+		cameraTrack = null;
+		torchEnabled = false;
+		currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+		cameraStarting = false;
+		startCamera();
+	} catch(error) {
+		cameraStarting = false;
+		console.error("Camera switch error:", error);
+		setStatus("Unable to switch camera.", "danger");
+	}
+}
+/* =========================================================
+   RESET
+   ========================================================= */
+function resetScan() {
+	lastDecodedText = "";
+	isProcessing = false;
+	document.getElementById("resultContainer").style.display = "none";
+	document.getElementById("btnSend").style.display = "none";
+	const reticle = document.getElementById("reticle");
+	if(reticle) {
+		reticle.style.display = "block";
+		reticle.style.borderColor = "rgba(96, 165, 250, 0.85)";
+	}
+	setStatus("Camera live • Ready to scan", "dark");
+	setGuidance("Place QR/barcode inside the box");
+}
+/* =========================================================
+   SEND TO PRMIS
+   ========================================================= */
+function sendDecodedValue() {
+	if(!lastDecodedText) {
+		isProcessing = false;
+		return;
+	}
+	const payload = {
+		type: "PRMIS_SCAN_RESULT",
+		source: "PRMIS_LIVE_SCANNER",
+		value: lastDecodedText,
+		timestamp: Date.now()
+	};
+	let sent = false;
+	/*
+	 * POPUP MODE
+	 */
+	if(window.opener && !window.opener.closed) {
+		window.opener.postMessage(payload, "*");
+		sent = true;
+	}
+	/*
+	 * IFRAME MODE
+	 */
+	if(window.parent && window.parent !== window) {
+		window.parent.postMessage(payload, "*");
+		sent = true;
+	}
+	if(sent) {
+		setStatus("Sent to PRMIS successfully", "success");
+		/*
+		 * Keep scanner alive when embedded.
+		 *
+		 * For popup mode, close after sending.
+		 */
+		if(window.parent === window && window.opener && !window.opener.closed) {
+			setTimeout(function() {
+				closeScanner();
+			}, 500);
+		} else {
+			/*
+			 * Embedded scanner:
+			 * prepare for another scan.
+			 */
+			setTimeout(function() {
+				resetScan();
+			}, 700);
+		}
+	} else {
+		alert("Decoded value:\n\n" + lastDecodedText + "\n\nNo PRMIS window was found.");
+		isProcessing = false;
+	}
+}
+/* =========================================================
+   CLOSE
+   ========================================================= */
+async function closeScanner() {
+	try {
+		if(html5QrCode && html5QrCode.isScanning) {
+			await html5QrCode.stop();
+		}
+	} catch(error) {
+		console.warn("Camera stop error:", error);
+	}
+	try {
+		if(cameraTrack) {
+			cameraTrack.stop();
+		}
+	} catch(error) {}
+	window.close();
+}
+/* =========================================================
+   MANUAL INPUT
+   ========================================================= */
+function promptManualInput() {
+	const text = prompt("Enter or paste QR/Barcode text:");
+	if(text && text.trim()) {
+		lastDecodedText = text.trim();
+		isProcessing = false;
+		onScanSuccess(lastDecodedText);
+	}
+}
+/* =========================================================
+   BEEP
+   ========================================================= */
+function playBeep() {
+	try {
+		const AudioContext = window.AudioContext || window.webkitAudioContext;
+		if(!AudioContext) {
+			return;
+		}
+		const audioCtx = new AudioContext();
+		const oscillator = audioCtx.createOscillator();
+		const gain = audioCtx.createGain();
+		oscillator.connect(gain);
+		gain.connect(audioCtx.destination);
+		oscillator.type = "sine";
+		oscillator.frequency.setValueAtTime(1550, audioCtx.currentTime);
+		gain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+		oscillator.start();
+		oscillator.stop(audioCtx.currentTime + 0.12);
+		setTimeout(function() {
+			try {
+				audioCtx.close();
+			} catch(e) {}
+		}, 300);
+	} catch(error) {
+		console.warn("Beep unavailable:", error);
+	}
+}
+/* =========================================================
+   VIBRATION
+   ========================================================= */
+function vibrateDevice() {
+	try {
+		if(navigator.vibrate) {
+			navigator.vibrate(
+				[70, 40, 100]);
+		}
+	} catch(error) {}
+}
+/* =========================================================
+   STATUS HELPER
+   ========================================================= */
+function setStatus(message, type) {
+	const element = document.getElementById("statusBadge");
+	if(!element) {
+		return;
+	}
+	let className = "status-badge px-3 py-1 rounded-pill text-white";
+	if(type === "success") {
+		className += " bg-success";
+	} else if(type === "danger") {
+		className += " bg-danger";
+	} else {
+		className += " bg-dark bg-opacity-75 border border-secondary";
+	}
+	element.className = className;
+	element.innerHTML = message;
+} 
 
-    // Initialize scanner on window load
-    window.addEventListener("DOMContentLoaded", function() {
-      initScanner();
-    });
-
-    function initScanner() {
-      const config = {
-        fps: 15,
-        qrbox: { width: 280, height: 180 },
-        aspectRatio: 1.0,
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        }
-      };
-
-      html5QrCode = new Html5Qrcode("reader", {
-        verbose: false,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.DATA_MATRIX
-        ]
-      });
-
-      startCamera(currentFacingMode);
-    }
-
-    function startCamera(facingMode) {
-      const statusBadge = document.getElementById("statusBadge");
-      if (statusBadge) {
-        statusBadge.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Accessing camera...';
-      }
-
-      html5QrCode.start(
-        { facingMode: facingMode },
-        { fps: 15, qrbox: { width: 280, height: 180 } },
-        onScanSuccess,
-        onScanFailure
-      ).then(() => {
-        if (statusBadge) {
-          statusBadge.innerHTML = '<i class="bi bi-record-circle-fill text-danger me-1"></i> Camera live. Hold card steady.';
-        }
-      }).catch(err => {
-        console.error("Camera start error:", err);
-        if (statusBadge) {
-          statusBadge.className = "position-absolute bottom-0 mb-3 px-3 py-1 rounded-pill bg-danger text-white small";
-          statusBadge.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> Camera blocked. Check browser permissions.';
-        }
-      });
-    }
-
-    function onScanSuccess(decodedText) {
-      if (isProcessing) return;
-      isProcessing = true;
-      lastDecodedText = decodedText;
-
-      playBeep();
-
-      // Show result UI
-      document.getElementById("resultContainer").style.display = "block";
-      document.getElementById("scannedTextDisplay").textContent = decodedText;
-      document.getElementById("btnSend").style.display = "inline-block";
-      document.getElementById("reticle").style.display = "none";
-
-      const statusBadge = document.getElementById("statusBadge");
-      if (statusBadge) {
-        statusBadge.className = "position-absolute bottom-0 mb-3 px-3 py-1 rounded-pill bg-success text-white small";
-        statusBadge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Decoded successfully!';
-      }
-
-      // Auto-send immediately to parent / opener
-      sendDecodedValue();
-    }
-
-    function onScanFailure(error) {
-      // Periodic frame read failure (normal)
-    }
-
-    function sendDecodedValue() {
-      const payload = {
-        type: "PRMIS_SCAN_RESULT",
-        source: "PRMIS_LIVE_SCANNER",
-        value: lastDecodedText,
-        timestamp: Date.now()
-      };
-
-      let sent = false;
-
-      // 1. Post to opener if opened in a popup window
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(payload, "*");
-        sent = true;
-      }
-
-      // 2. Post to parent if embedded in iframe
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage(payload, "*");
-        sent = true;
-      }
-
-      if (sent) {
-        // Automatically close popup window after sending
-        setTimeout(function() {
-          closeScanner();
-        }, 500);
-      } else {
-        alert("Decoded value: " + lastDecodedText + "\n\n(No parent window found to receive message. You can copy the text.)");
-      }
-    }
-
-    function resetScan() {
-      lastDecodedText = "";
-      isProcessing = false;
-      document.getElementById("resultContainer").style.display = "none";
-      document.getElementById("btnSend").style.display = "none";
-      document.getElementById("reticle").style.display = "flex";
-      const statusBadge = document.getElementById("statusBadge");
-      if (statusBadge) {
-        statusBadge.className = "position-absolute bottom-0 mb-3 px-3 py-1 rounded-pill bg-dark bg-opacity-75 text-white small border border-secondary";
-        statusBadge.innerHTML = '<i class="bi bi-record-circle-fill text-danger me-1"></i> Camera live. Hold card steady.';
-      }
-    }
-
-    function switchCamera() {
-      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().then(() => {
-          startCamera(currentFacingMode);
-        });
-      } else {
-        startCamera(currentFacingMode);
-      }
-    }
-
-    function closeScanner() {
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().then(() => {
-          window.close();
-        }).catch(() => {
-          window.close();
-        });
-      } else {
-        window.close();
-      }
-    }
-
-    function promptManualInput() {
-      const text = prompt("Enter or paste QR/Barcode text:");
-      if (text && text.trim()) {
-        lastDecodedText = text.trim();
-        onScanSuccess(lastDecodedText);
-      }
-    }
-
-    function playBeep() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.15);
-      } catch (e) {
-        console.log("Audio feedback not allowed without gesture", e);
-      }
-    }
-  </script>
+</script> 
 </body>
 </html>
